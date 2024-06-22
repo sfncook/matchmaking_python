@@ -5,6 +5,7 @@ from flask_cors import CORS
 import os
 import pickle
 import json
+from pprint import pprint
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS
@@ -22,32 +23,41 @@ METADATA_DB_FILE = 'metadata_db.json'
 
 # Function to save the FAISS index to a file
 def save_vector_db():
+    global index
     with open(VECTOR_DB_FILE, 'wb') as f:
         pickle.dump(index.reconstruct_n(0, index.ntotal), f)
 
 # Function to load the FAISS index from a file
 def load_vector_db():
+    global index
     if os.path.exists(VECTOR_DB_FILE):
         with open(VECTOR_DB_FILE, 'rb') as f:
             vectors = pickle.load(f)
             index.add(vectors)
+            print("Loaded vectors:")
+            pprint(vectors)
 
 # Function to save the metadata to a file
 def save_metadata_db():
+    global metadata_db, id_to_index
     with open(METADATA_DB_FILE, 'w') as f:
         json.dump({'metadata_db': metadata_db, 'id_to_index': id_to_index}, f)
 
 # Function to load the metadata from a file
 def load_metadata_db():
+    global metadata_db, id_to_index
     if os.path.exists(METADATA_DB_FILE):
         with open(METADATA_DB_FILE, 'r') as f:
             data = json.load(f)
-            global metadata_db, id_to_index
             metadata_db = data['metadata_db']
             id_to_index = data['id_to_index']
+            print("Loaded metadata:")
+            pprint(metadata_db)
+            pprint(id_to_index)
 
 # Function to initialize the FAISS index with random vectors and metadata
 def initialize_db(num_vectors=10, dimension=12):
+    global metadata_db, id_to_index, index
     np.random.seed(0)  # For reproducibility
     random_vectors = np.random.rand(num_vectors, dimension).astype('float32') * 100  # Scale values to [0, 100]
     index.add(random_vectors)
@@ -59,24 +69,19 @@ def initialize_db(num_vectors=10, dimension=12):
         id_to_index[unique_id] = i
 
     print("Initialized vectors and metadata:")
-    print(random_vectors)
-    print(metadata_db)
-
-# Load the FAISS index and metadata from file, if available
-if __name__ == '__main__' and not os.environ.get('WERKZEUG_RUN_MAIN'):
-    load_vector_db()
-    load_metadata_db()
-    if index.ntotal == 0:  # If no data was loaded, initialize with default data
-        initialize_db()
-        save_vector_db()
-        save_metadata_db()
+    pprint(random_vectors)
+    pprint(metadata_db)
 
 @app.route('/hello', methods=['GET'])
 def hello_world():
+    global metadata_db
+    pprint(metadata_db)
     return 'Hello, World!'
 
 @app.route('/point', methods=['POST'])
 def add_point():
+    global metadata_db, id_to_index, index
+    pprint(metadata_db)
     data = request.json
     if not data or 'vector' not in data or 'id' not in data:
         return jsonify({'error': 'Invalid input'}), 400
@@ -102,10 +107,16 @@ def add_point():
     save_vector_db()
     save_metadata_db()
 
+    print("Added vector and metadata:")
+    pprint(vector_np)
+    pprint(metadata_db)
+
     return jsonify({'message': 'Vector and metadata added successfully', 'total_vectors': index.ntotal}), 201
 
 @app.route('/point/nearest', methods=['POST'])
 def nearest_point():
+    global metadata_db, index
+    pprint(metadata_db)
     data = request.json
     if not data or 'point' not in data or 'limit' not in data:
         return jsonify({'error': 'Invalid input'}), 400
@@ -122,9 +133,19 @@ def nearest_point():
     point_np = np.array(point, dtype='float32').reshape(1, -1)  # Convert to NumPy array and reshape
     distances, indices = index.search(point_np, limit)  # Perform nearest-neighbor search
 
-
     nearest_points = [{'index': int(idx), 'distance': float(dist), 'metadata': metadata_db[int(idx)]} for dist, idx in zip(distances[0], indices[0])]
     return jsonify({'nearest_points': nearest_points}), 200
 
 if __name__ == '__main__':
+    if os.environ.get('WERKZEUG_RUN_MAIN'):
+        load_vector_db()
+        load_metadata_db()
+        if index.ntotal == 0:  # If no data was loaded, initialize with default data
+            initialize_db()
+            save_vector_db()
+            save_metadata_db()
+        print("**************************")
+        print("**************************")
+        print("**************************")
+        pprint(metadata_db)
     app.run(debug=True)
