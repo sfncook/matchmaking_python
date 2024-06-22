@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
 import faiss
 import numpy as np
+from flask_cors import CORS
 import os
+import pickle
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS
 
 # Initialize FAISS index for 12-dimensional vectors
 d = 12  # dimension
@@ -12,6 +15,23 @@ index = faiss.IndexFlatL2(d)  # L2 distance index
 # Metadata storage
 metadata_db = []
 id_to_index = {}
+
+VECTOR_DB_FILE = 'vector_db.pkl'
+
+# Function to save the FAISS index and metadata to a file
+def save_db():
+    with open(VECTOR_DB_FILE, 'wb') as f:
+        pickle.dump((index.reconstruct_n(0, index.ntotal), metadata_db, id_to_index), f)
+
+# Function to load the FAISS index and metadata from a file
+def load_db():
+    if os.path.exists(VECTOR_DB_FILE):
+        with open(VECTOR_DB_FILE, 'rb') as f:
+            vectors, metadata, id_index = pickle.load(f)
+            index.add(vectors)
+            global metadata_db, id_to_index
+            metadata_db = metadata
+            id_to_index = id_index
 
 # Function to initialize the FAISS index with random vectors and metadata
 def initialize_db(num_vectors=10, dimension=12):
@@ -28,6 +48,12 @@ def initialize_db(num_vectors=10, dimension=12):
     print("Initialized vectors and metadata:")
     print(random_vectors)
     print(metadata_db)
+
+# Load the FAISS index and metadata from file, if available
+if __name__ == '__main__' and not os.environ.get('WERKZEUG_RUN_MAIN'):
+    load_db()
+    if index.ntotal == 0:  # If no data was loaded, initialize with default data
+        initialize_db()
 
 @app.route('/hello', methods=['GET'])
 def hello_world():
@@ -56,6 +82,9 @@ def add_point():
     metadata_db.append(metadata)
     id_to_index[unique_id] = index.ntotal - 1
 
+    # Save the updated database
+    save_db()
+
     return jsonify({'message': 'Vector and metadata added successfully', 'total_vectors': index.ntotal}), 201
 
 @app.route('/point/nearest', methods=['POST'])
@@ -78,10 +107,6 @@ def nearest_point():
 
     nearest_points = [{'index': int(idx), 'distance': float(dist), 'metadata': metadata_db[int(idx)]} for dist, idx in zip(distances[0], indices[0])]
     return jsonify({'nearest_points': nearest_points}), 200
-
-# Initialize the FAISS index with 10 random vectors and their metadata
-if __name__ == '__main__' and not os.environ.get('WERKZEUG_RUN_MAIN'):
-    initialize_db()
 
 if __name__ == '__main__':
     app.run(debug=True)
