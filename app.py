@@ -74,9 +74,19 @@ def initialize_db(num_vectors=10, dimension=12):
 
 @app.route('/hello', methods=['GET'])
 def hello_world():
-    global metadata_db
-    pprint(metadata_db)
-    return 'Hello, World!'
+    global index, metadata_db
+    all_points = []
+
+    for i in range(index.ntotal):
+        vector = index.reconstruct(i)
+        all_points.append({
+            'index': i,
+            'coordinates': vector.tolist(),
+            'metadata': metadata_db[i]
+        })
+
+    return jsonify(all_points)
+
 
 @app.route('/point', methods=['POST'])
 def add_point():
@@ -133,8 +143,18 @@ def nearest_point():
     point_np = np.array(point, dtype='float32').reshape(1, -1)  # Convert to NumPy array and reshape
     distances, indices = index.search(point_np, limit)  # Perform nearest-neighbor search
 
-    nearest_points = [{'index': int(idx), 'distance': float(dist), 'metadata': metadata_db[int(idx)]} for dist, idx in zip(distances[0], indices[0])]
+    nearest_points = []
+    for dist, idx in zip(distances[0], indices[0]):
+        vector = index.reconstruct(int(idx))
+        nearest_points.append({
+            'index': int(idx),
+            'distance': float(dist),
+            'metadata': metadata_db[int(idx)],
+            'coordinates': vector.tolist()
+        })
+
     return jsonify({'nearest_points': nearest_points}), 200
+
 
 if __name__ == '__main__':
     if os.environ.get('WERKZEUG_RUN_MAIN'):
