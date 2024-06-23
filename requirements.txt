@@ -4,3 +4,5 @@ Werkzeug==2.1.2
 faiss-cpu==1.7.3  # Adjust version as needed
 numpy>=1.23.4
 matplotlib
+fuzzywuzzy
+python-Levenshtein
