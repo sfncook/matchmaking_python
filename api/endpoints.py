@@ -34,30 +34,18 @@ def create_api_blueprint(vector_store):
     @api.route('/vectors', methods=['POST'])
     def add_new_vector():
         try:
-            # Get the JSON data from the request
             data = request.json
-
-            # Validate the input data
             if not data or not isinstance(data, list):
                 return jsonify({'error': 'Invalid data format. Expected a JSON array of numbers.'}), 400
-            
             # Ensure all elements in the list are numbers (integers or floats)
             if not all(isinstance(item, (int, float)) for item in data):
                 return jsonify({'error': 'All elements in the input data must be numbers.'}), 400
-            
-            # Generate a new UUID
-            vector_id = uuid.uuid4()
-
-            # Assuming vector_store is an object with an add_vector_data method
-            # and the method requires an ID and vector data.
+            vector_id = str(uuid.uuid4())
             vector_store.add_vector_data(vector_id, data)
-
-            # Return success response with the new UUID
             return jsonify({'uuid': str(vector_id)}), 201
-
         except Exception as e:
             # Handle any other unexpected errors
-            return jsonify({'uuid': str(vector_id)}), 201
+            return jsonify({'uuid': vector_id}), 201
 
 
         # 

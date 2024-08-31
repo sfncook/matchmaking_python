@@ -58,17 +58,26 @@ class FlatFileVectorStore(VectorStore):
             "uuid": uuid,
             "faiss_index": new_faiss_index
         })
+        print(self.metadatas)
 
         if save_to_files:
-            # Save vector data and metadata to flat files
-            with open(self.vector_db_file, 'wb') as f:
-                # Save all vectors from the index
-                all_vectors = self.index.reconstruct_n(0, self.index.ntotal)
-                pickle.dump(all_vectors, f)
-                
-            with open(self.metadata_db_file, 'w') as f:
-                # Save metadata
-                json.dump(self.metadatas, f, indent=4)
+            try:
+                # Save vector data and metadata to flat files
+                with open(self.vector_db_file, 'wb') as f:
+                    # Save all vectors from the index
+                    all_vectors = self.index.reconstruct_n(0, self.index.ntotal)
+                    pickle.dump(all_vectors, f)
+                    print("Vector data saved successfully.")
+
+                with open(self.metadata_db_file, 'w') as f:
+                    # Print the metadata for debugging
+                    print("Metadata to be saved:", self.metadatas)
+                    # Save metadata
+                    json.dump(self.metadatas, f, indent=4)
+                    print("Metadata saved successfully.")
+                    
+            except Exception as e:
+                print(f"An error occurred while saving files: {e}")
     
     def search_nearest(self, vector, limit):
         vector_np = np.array(vector, dtype='float32').reshape(1, -1)
