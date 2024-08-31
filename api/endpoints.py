@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 import numpy as np
+import random
 from pprint import pprint
 
 api = Blueprint('api', __name__)
@@ -7,14 +8,33 @@ api = Blueprint('api', __name__)
 def create_api_blueprint(vector_store):
     @api.route('/hello', methods=['GET'])
     def hello_world():
-        
         return "hello", 200
 
-    # @api.route('/point', methods=['POST'])
-    # def add_point():
-    #     data = request.json
-    #     if not data or 'vector' not in data or 'id' not in data:
-    #         return jsonify({'error': 'Invalid input'}), 400
+
+    @api.route('/vectors/random', methods=['GET'])
+    def points_random():
+        try:
+            # Get query parameters
+            dimensions = int(request.args.get('dimensions', 10))  # Default to 10 if not provided
+            min_value = float(request.args.get('min_value', 0.0))  # Default to 0.0 if not provided
+            max_value = float(request.args.get('max_value', 1.0))  # Default to 1.0 if not provided
+
+            # Validate min_value and max_value
+            if min_value > max_value:
+                return jsonify({'error': 'min_value cannot be greater than max_value'}), 400
+
+            # Generate random list of float values
+            random_floats = [random.uniform(min_value, max_value) for _ in range(dimensions)]
+
+            return jsonify(random_floats)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+
+    @api.route('/point', methods=['POST'])
+    def add_point():
+        data = request.json
+        if not data or 'vector' not in data or 'id' not in data:
+            return jsonify({'error': 'Invalid input'}), 400
 
     #     vector = data['vector']
     #     unique_id = data['id']
