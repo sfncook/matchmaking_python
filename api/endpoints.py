@@ -58,20 +58,24 @@ def create_api_blueprint(vector_store):
         metadata_db_file = data['metadata_db_file']
         vector_db_file = data['vector_db_file']
 
+        metadata_db_file_with_dir = os.path.join("data", metadata_db_file)
+        vector_db_file_with_dir = os.path.join("data", vector_db_file)
+
         # Load metadata from the metadata database file
-        if os.path.exists(metadata_db_file):
-            with open(metadata_db_file, 'r') as f:
+        if os.path.exists(metadata_db_file_with_dir):
+            with open(metadata_db_file_with_dir, 'r') as f:
                 metadata_entries = json.load(f)
 
                 # Load vectors from the vector database file
-                if os.path.exists(vector_db_file):
-                    with open(vector_db_file, 'rb') as f:
+                if os.path.exists(vector_db_file_with_dir):
+                    with open(vector_db_file_with_dir, 'rb') as f:
                         all_vectors = pickle.load(f)
 
                         # Convert NumPy array to a simple 2D list
                         if isinstance(all_vectors, np.ndarray):
                             all_vectors = all_vectors.tolist()
 
+                        vector_store.clear()
                         # Add each vector to the index using UUIDs from metadata
                         for entry in metadata_entries:
                             uuid = entry["uuid"]
