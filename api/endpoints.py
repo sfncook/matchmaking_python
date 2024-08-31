@@ -9,7 +9,7 @@ import os
 
 api = Blueprint('api', __name__)
 
-def create_api_blueprint(vector_store, consumer_store):
+def create_api_blueprint(vector_store, consumer_store, product_store):
     def get_all_data():
         all_uuids = vector_store.get_all_uuids()
         pprint(all_uuids)
@@ -36,11 +36,25 @@ def create_api_blueprint(vector_store, consumer_store):
     def hello_world():
         return get_all_data(), 200
 
-    @api.route('/consumers/random', methods=['POST'])
+    @api.route('/consumers', methods=['POST'])
     def add_random_consumer():
         consumer_uuid = str(uuid.uuid4())
         consumer_store.add_new_consumer_random(consumer_uuid)
-        return consumer_uuid, 201
+        return jsonify({"uuid":consumer_uuid}), 201
+
+    @api.route('/consumers', methods=['GET'])
+    def get_all_consumers():
+        return jsonify({"consumers":consumer_store.get_all_consumers()}), 200
+
+    @api.route('/products', methods=['POST'])
+    def add_random_product():
+        product_uuid = str(uuid.uuid4())
+        product_store.add_new_product_random(product_uuid)
+        return jsonify({"uuid":product_uuid}), 201
+
+    @api.route('/products', methods=['GET'])
+    def get_all_products():
+        return jsonify({"products":product_store.get_all_products()}), 200
 
     @api.route('/vectors/random', methods=['GET'])
     def points_random():
