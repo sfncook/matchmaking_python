@@ -20,33 +20,6 @@ class FlatFileVectorStore(VectorStore):
 
     def initialize(self):
         print("init")
-        # # Load metadata from the metadata database file
-        # if os.path.exists(self.metadata_db_file):
-        #     with open(self.metadata_db_file, 'r') as f:
-        #         metadata_entries = json.load(f)
-        #         print("Loaded metadata:")
-        #         pprint(metadata_entries)
-
-        #         # Load vectors from the vector database file
-        #         if os.path.exists(self.vector_db_file):
-        #             with open(self.vector_db_file, 'rb') as f:
-        #                 all_vectors = pickle.load(f)
-
-        #                 # Convert NumPy array to a simple 2D list
-        #                 if isinstance(all_vectors, np.ndarray):
-        #                     all_vectors = all_vectors.tolist()
-
-        #                 print("Loaded vectors:")
-        #                 pprint(all_vectors)
-
-        #                 # Add each vector to the index using UUIDs from metadata
-        #                 for entry in metadata_entries:
-        #                     uuid = entry["uuid"]
-        #                     faiss_index = entry["faiss_index"]
-        #                     vector = all_vectors[faiss_index]  # Retrieve the vector using the FAISS index
-        #                     self.add_vector_data(uuid, vector, False)
-        # else:
-        #     print("Metadata file does not exist.")
 
     def add_vector_data(self, uuid: str, vector: List[float], save_to_files: bool = True):
         vector_np = np.array(vector, dtype='float32').reshape(1, -1)
@@ -87,6 +60,21 @@ class FlatFileVectorStore(VectorStore):
         indices = indices.flatten()
         uuids = [md["uuid"] for md in self.metadatas if md["faiss_index"] in indices]
         return distances, indices, uuids
+
+    def get_all_uuids(self):
+        return [md["uuid"] for md in self.metadatas]
+
+    def get_vector_for_uuid(self, uuid: str):
+        metadata_entry = next((md for md in self.metadatas if md["uuid"] == uuid), None)
+        if metadata_entry is None:
+            raise ValueError(f"No metadata found for uuid: {uuid}")
+        faiss_index = metadata_entry["faiss_index"]
+        try:
+            vector = self.index.reconstruct(faiss_index)
+        except Exception as e:
+            raise RuntimeError(f"Failed to reconstruct vector for faiss_index {faiss_index}: {e}")
+        return faiss_index, vector.tolist()
+
     
     def count(self):
         return self.index.ntotal

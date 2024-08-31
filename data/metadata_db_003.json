@@ -1,22 +1,14 @@
 [
     {
-        "uuid": "9f4820ca-cc1b-40e3-abd6-0af1966fc3f4",
-        "faiss_index": 0
+        "faiss_index": 0,
+        "uuid": "642e1d9f-5697-40a3-839b-475bc89bbf98"
     },
     {
-        "uuid": "255a140b-7de3-455d-887f-bada644ba984",
-        "faiss_index": 1
+        "faiss_index": 1,
+        "uuid": "0b4acb38-2b0f-44ca-9e91-f48a8a0ef0ec"
     },
     {
-        "uuid": "4147acdb-e39a-4a17-bbb9-f2fd0b663d18",
-        "faiss_index": 2
-    },
-    {
-        "uuid": "976cceec-08eb-411d-bd27-faff9553c157",
-        "faiss_index": 3
-    },
-    {
-        "uuid": "a4975c2a-dd49-4c1c-856a-04cede9532e7",
-        "faiss_index": 4
+        "faiss_index": 2,
+        "uuid": "8c265aee-1b9e-4f3e-934f-102a216e4f1e"
     }
 ]

@@ -10,8 +10,31 @@ import os
 api = Blueprint('api', __name__)
 
 def create_api_blueprint(vector_store):
+    def get_all_data():
+        all_uuids = vector_store.get_all_uuids()
+        all_vector_data = []
+
+        for uuid in all_uuids:
+            vector = vector_store.get_vector_for_uuid(uuid)
+            faiss_index = next(md["faiss_index"] for md in vector_store.metadatas if md["uuid"] == uuid)
+            all_vector_data.append({
+                "vector": vector,
+                "faiss_index": faiss_index,
+                "uuid": uuid
+            })
+
+        # Sort by faiss_index
+        all_vector_data.sort(key=lambda x: x["faiss_index"])
+
+        # Extract vectors and metadata
+        all_vectors = [v["vector"] for v in all_vector_data]
+        all_metadata = [{"faiss_index": v["faiss_index"], "uuid": v["uuid"]} for v in all_vector_data]
+
+        return all_vectors, all_metadata
+
     @api.route('/hello', methods=['GET'])
     def hello_world():
+        all_vectors, all_metadata = get_all_data()
         return "hello", 200
 
 
@@ -55,6 +78,7 @@ def create_api_blueprint(vector_store):
         data = request.json
         if not data or 'metadata_db_file' not in data or 'vector_db_file' not in data:
             return jsonify({'error': 'Invalid input'}), 400
+
         metadata_db_file = data['metadata_db_file']
         vector_db_file = data['vector_db_file']
 
@@ -70,27 +94,63 @@ def create_api_blueprint(vector_store):
                 if os.path.exists(vector_db_file_with_dir):
                     with open(vector_db_file_with_dir, 'rb') as f:
                         all_vectors = pickle.load(f)
-
-                        # Convert NumPy array to a simple 2D list
-                        if isinstance(all_vectors, np.ndarray):
-                            all_vectors = all_vectors.tolist()
+                        pprint(all_vectors)
 
                         vector_store.clear()
-                        # Add each vector to the index using UUIDs from metadata
+
+                        # Rebuild the FAISS index and metadata
                         for entry in metadata_entries:
                             uuid = entry["uuid"]
                             faiss_index = entry["faiss_index"]
-                            vector = all_vectors[faiss_index]  # Retrieve the vector using the FAISS index
-                            vector_store.add_vector_data(uuid, vector)
+
+                            # Retrieve the correct vector using the faiss_index
+                            vector_tuple = next((v for v in all_vectors if v[0] == faiss_index), None)
+                            if vector_tuple:
+                                _, vector = vector_tuple
+                                print(f"FOUND vector for faiss_index:{faiss_index} vector:{vector}")
+                                vector_store.add_vector_data(uuid, vector)
+                            else:
+                                print(f"MISSING vector for faiss_index: {faiss_index}")
 
                         return jsonify({
-                            "metadata_entries":metadata_entries,
-                            "all_vectors":all_vectors
-                        }, 200)
+                            "metadata_entries": metadata_entries,
+                            "all_vectors": all_vectors
+                        }), 200
                 else:
                     return jsonify({'error': 'Vector file does not exist.'}), 400
         else:
             return jsonify({'error': 'Metadata file does not exist.'}), 400
+
+
+    @api.route('/vectors/save_to_file', methods=['POST'])
+    def save_to_file():
+        data = request.json
+        if not data or 'metadata_db_file' not in data or 'vector_db_file' not in data:
+            return jsonify({'error': 'Invalid input'}), 400
+
+        metadata_db_file = data['metadata_db_file']
+        vector_db_file = data['vector_db_file']
+
+        metadata_db_file_with_dir = os.path.join("data", metadata_db_file)
+        vector_db_file_with_dir = os.path.join("data", vector_db_file)
+
+        try:
+            all_vectors, all_metadata = get_all_data()
+            # Save vector data and metadata to flat files
+            with open(vector_db_file_with_dir, 'wb') as f:
+                pickle.dump(all_vectors, f)
+                print("Vector data saved successfully.")
+
+            with open(metadata_db_file_with_dir, 'w') as f:
+                print("Metadata to be saved:", all_metadata)
+                json.dump(all_metadata, f, indent=4)
+                print("Metadata saved successfully.")
+        
+        except Exception as e:
+            print(f"An error occurred while saving files: {e}")
+            return jsonify({'error': str(e)}), 500
+
+        return jsonify({'message': 'Files saved successfully'}), 200
 
         # 
 
