@@ -9,7 +9,7 @@ import os
 
 api = Blueprint('api', __name__)
 
-def create_api_blueprint(vector_store):
+def create_api_blueprint(vector_store, consumer_store):
     def get_all_data():
         all_uuids = vector_store.get_all_uuids()
         pprint(all_uuids)
@@ -32,11 +32,15 @@ def create_api_blueprint(vector_store):
         # Return the zipped data as a list of objects
         return jsonify(all_vector_data)
 
-
     @api.route('/hello', methods=['GET'])
     def hello_world():
         return get_all_data(), 200
 
+    @api.route('/consumers/random', methods=['POST'])
+    def add_random_consumer():
+        consumer_uuid = str(uuid.uuid4())
+        consumer_store.add_new_consumer_random(consumer_uuid)
+        return consumer_uuid, 201
 
     @api.route('/vectors/random', methods=['GET'])
     def points_random():
@@ -120,8 +124,6 @@ def create_api_blueprint(vector_store):
         else:
             return jsonify({'error': 'Metadata file does not exist.'}), 400
 
-
-
     @api.route('/vectors/save_to_file', methods=['POST'])
     def save_to_file():
         data = request.json
@@ -151,59 +153,5 @@ def create_api_blueprint(vector_store):
             return jsonify({'error': str(e)}), 500
 
         return jsonify({'message': 'Files saved successfully'}), 200
-
-        # 
-
-    #     vector = data['vector']
-    #     unique_id = data['id']
-    #     if len(vector) != 12:
-    #         return jsonify({'error': 'Vector must be 12-dimensional'}), 400
-
-    #     if unique_id in metadata_store.id_to_index:
-    #         return jsonify({'error': 'ID must be unique'}), 400
-
-    #     vector_np = np.array(vector, dtype='float32').reshape(1, -1)  # Convert to NumPy array and reshape
-    #     faiss_manager.index.add(vector_np)  # Add vector to FAISS index
-
-    #     # Add metadata
-    #     metadata = data.get('metadata', {})
-    #     metadata['id'] = unique_id
-    #     metadata_store.add_metadata(unique_id, metadata)
-
-    #     print("Added vector and metadata:")
-    #     pprint(vector_np)
-    #     pprint(metadata_store.metadata_db)
-
-    #     return jsonify({'message': 'Vector and metadata added successfully', 'total_vectors': faiss_manager.index.ntotal}), 201
-
-    # @api.route('/point/nearest', methods=['POST'])
-    # def nearest_point():
-    #     data = request.json
-    #     if not data or 'point' not in data or 'limit' not in data:
-    #         return jsonify({'error': 'Invalid input'}), 400
-
-    #     point = data['point']
-    #     limit = data['limit']
-
-    #     if limit <= 0:
-    #         return jsonify({'error': 'Limit must be a positive integer'}), 400
-
-    #     if len(point) != 12:
-    #         return jsonify({'error': 'Point must be 12-dimensional'}), 400
-
-    #     point_np = np.array(point, dtype='float32').reshape(1, -1)  # Convert to NumPy array and reshape
-    #     distances, indices = faiss_manager.index.search(point_np, limit)  # Perform nearest-neighbor search
-
-    #     nearest_points = [
-    #         {
-    #             'index': int(idx),
-    #             'distance': float(dist),
-    #             'metadata': metadata_store.metadata_db[int(idx)],
-    #             'coordinates': faiss_manager.index.reconstruct(int(idx)).tolist()
-    #         }
-    #         for dist, idx in zip(distances[0], indices[0])
-    #     ]
-
-    #     return jsonify({'nearest_points': nearest_points}), 200
 
     return api
