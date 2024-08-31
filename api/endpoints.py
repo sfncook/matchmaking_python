@@ -12,30 +12,30 @@ api = Blueprint('api', __name__)
 def create_api_blueprint(vector_store):
     def get_all_data():
         all_uuids = vector_store.get_all_uuids()
+        pprint(all_uuids)
         all_vector_data = []
 
         for uuid in all_uuids:
             vector = vector_store.get_vector_for_uuid(uuid)
+            pprint(vector)
             faiss_index = next(md["faiss_index"] for md in vector_store.metadatas if md["uuid"] == uuid)
             all_vector_data.append({
                 "vector": vector,
                 "faiss_index": faiss_index,
                 "uuid": uuid
             })
+        pprint(all_vector_data)
 
         # Sort by faiss_index
         all_vector_data.sort(key=lambda x: x["faiss_index"])
 
-        # Extract vectors and metadata
-        all_vectors = [v["vector"] for v in all_vector_data]
-        all_metadata = [{"faiss_index": v["faiss_index"], "uuid": v["uuid"]} for v in all_vector_data]
+        # Return the zipped data as a list of objects
+        return jsonify(all_vector_data)
 
-        return all_vectors, all_metadata
 
     @api.route('/hello', methods=['GET'])
     def hello_world():
-        all_vectors, all_metadata = get_all_data()
-        return "hello", 200
+        return get_all_data(), 200
 
 
     @api.route('/vectors/random', methods=['GET'])
@@ -98,6 +98,8 @@ def create_api_blueprint(vector_store):
 
                         vector_store.clear()
 
+                        many_vectors_loaded = 0
+
                         # Rebuild the FAISS index and metadata
                         for entry in metadata_entries:
                             uuid = entry["uuid"]
@@ -107,19 +109,17 @@ def create_api_blueprint(vector_store):
                             vector_tuple = next((v for v in all_vectors if v[0] == faiss_index), None)
                             if vector_tuple:
                                 _, vector = vector_tuple
-                                print(f"FOUND vector for faiss_index:{faiss_index} vector:{vector}")
                                 vector_store.add_vector_data(uuid, vector)
+                                many_vectors_loaded += 1
                             else:
                                 print(f"MISSING vector for faiss_index: {faiss_index}")
 
-                        return jsonify({
-                            "metadata_entries": metadata_entries,
-                            "all_vectors": all_vectors
-                        }), 200
+                        return jsonify({"many_vectors_loaded":many_vectors_loaded}), 200
                 else:
                     return jsonify({'error': 'Vector file does not exist.'}), 400
         else:
             return jsonify({'error': 'Metadata file does not exist.'}), 400
+
 
 
     @api.route('/vectors/save_to_file', methods=['POST'])
