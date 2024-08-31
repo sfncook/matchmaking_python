@@ -19,33 +19,34 @@ class FlatFileVectorStore(VectorStore):
         self.metadatas = []
 
     def initialize(self):
-        # Load metadata from the metadata database file
-        if os.path.exists(self.metadata_db_file):
-            with open(self.metadata_db_file, 'r') as f:
-                metadata_entries = json.load(f)
-                print("Loaded metadata:")
-                pprint(metadata_entries)
+        print("init")
+        # # Load metadata from the metadata database file
+        # if os.path.exists(self.metadata_db_file):
+        #     with open(self.metadata_db_file, 'r') as f:
+        #         metadata_entries = json.load(f)
+        #         print("Loaded metadata:")
+        #         pprint(metadata_entries)
 
-                # Load vectors from the vector database file
-                if os.path.exists(self.vector_db_file):
-                    with open(self.vector_db_file, 'rb') as f:
-                        all_vectors = pickle.load(f)
+        #         # Load vectors from the vector database file
+        #         if os.path.exists(self.vector_db_file):
+        #             with open(self.vector_db_file, 'rb') as f:
+        #                 all_vectors = pickle.load(f)
 
-                        # Convert NumPy array to a simple 2D list
-                        if isinstance(all_vectors, np.ndarray):
-                            all_vectors = all_vectors.tolist()
+        #                 # Convert NumPy array to a simple 2D list
+        #                 if isinstance(all_vectors, np.ndarray):
+        #                     all_vectors = all_vectors.tolist()
 
-                        print("Loaded vectors:")
-                        pprint(all_vectors)
+        #                 print("Loaded vectors:")
+        #                 pprint(all_vectors)
 
-                        # Add each vector to the index using UUIDs from metadata
-                        for entry in metadata_entries:
-                            uuid = entry["uuid"]
-                            faiss_index = entry["faiss_index"]
-                            vector = all_vectors[faiss_index]  # Retrieve the vector using the FAISS index
-                            self.add_vector_data(uuid, vector, False)
-        else:
-            print("Metadata file does not exist.")
+        #                 # Add each vector to the index using UUIDs from metadata
+        #                 for entry in metadata_entries:
+        #                     uuid = entry["uuid"]
+        #                     faiss_index = entry["faiss_index"]
+        #                     vector = all_vectors[faiss_index]  # Retrieve the vector using the FAISS index
+        #                     self.add_vector_data(uuid, vector, False)
+        # else:
+        #     print("Metadata file does not exist.")
 
     def add_vector_data(self, uuid: str, vector: List[float], save_to_files: bool = True):
         vector_np = np.array(vector, dtype='float32').reshape(1, -1)
@@ -60,24 +61,24 @@ class FlatFileVectorStore(VectorStore):
         })
         print(self.metadatas)
 
-        if save_to_files:
-            try:
-                # Save vector data and metadata to flat files
-                with open(self.vector_db_file, 'wb') as f:
-                    # Save all vectors from the index
-                    all_vectors = self.index.reconstruct_n(0, self.index.ntotal)
-                    pickle.dump(all_vectors, f)
-                    print("Vector data saved successfully.")
+        # if save_to_files:
+        #     try:
+        #         # Save vector data and metadata to flat files
+        #         with open(self.vector_db_file, 'wb') as f:
+        #             # Save all vectors from the index
+        #             all_vectors = self.index.reconstruct_n(0, self.index.ntotal)
+        #             pickle.dump(all_vectors, f)
+        #             print("Vector data saved successfully.")
 
-                with open(self.metadata_db_file, 'w') as f:
-                    # Print the metadata for debugging
-                    print("Metadata to be saved:", self.metadatas)
-                    # Save metadata
-                    json.dump(self.metadatas, f, indent=4)
-                    print("Metadata saved successfully.")
+        #         with open(self.metadata_db_file, 'w') as f:
+        #             # Print the metadata for debugging
+        #             print("Metadata to be saved:", self.metadatas)
+        #             # Save metadata
+        #             json.dump(self.metadatas, f, indent=4)
+        #             print("Metadata saved successfully.")
                     
-            except Exception as e:
-                print(f"An error occurred while saving files: {e}")
+        #     except Exception as e:
+        #         print(f"An error occurred while saving files: {e}")
     
     def search_nearest(self, vector, limit):
         vector_np = np.array(vector, dtype='float32').reshape(1, -1)

@@ -3,6 +3,9 @@ import numpy as np
 import random
 import uuid
 from pprint import pprint
+import pickle
+import json
+import os
 
 api = Blueprint('api', __name__)
 
@@ -47,6 +50,43 @@ def create_api_blueprint(vector_store):
             # Handle any other unexpected errors
             return jsonify({'uuid': vector_id}), 201
 
+    @api.route('/vectors/load_from_file', methods=['POST'])
+    def load_from_file():
+        data = request.json
+        if not data or 'metadata_db_file' not in data or 'vector_db_file' not in data:
+            return jsonify({'error': 'Invalid input'}), 400
+        metadata_db_file = data['metadata_db_file']
+        vector_db_file = data['vector_db_file']
+
+        # Load metadata from the metadata database file
+        if os.path.exists(metadata_db_file):
+            with open(metadata_db_file, 'r') as f:
+                metadata_entries = json.load(f)
+
+                # Load vectors from the vector database file
+                if os.path.exists(vector_db_file):
+                    with open(vector_db_file, 'rb') as f:
+                        all_vectors = pickle.load(f)
+
+                        # Convert NumPy array to a simple 2D list
+                        if isinstance(all_vectors, np.ndarray):
+                            all_vectors = all_vectors.tolist()
+
+                        # Add each vector to the index using UUIDs from metadata
+                        for entry in metadata_entries:
+                            uuid = entry["uuid"]
+                            faiss_index = entry["faiss_index"]
+                            vector = all_vectors[faiss_index]  # Retrieve the vector using the FAISS index
+                            vector_store.add_vector_data(uuid, vector)
+
+                        return jsonify({
+                            "metadata_entries":metadata_entries,
+                            "all_vectors":all_vectors
+                        }, 200)
+                else:
+                    return jsonify({'error': 'Vector file does not exist.'}), 400
+        else:
+            return jsonify({'error': 'Metadata file does not exist.'}), 400
 
         # 
 
