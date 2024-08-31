@@ -1,0 +1,42 @@
+[
+    {
+      "uuid": "ID_000",
+      "faiss_index": 0
+    },
+    {
+      "uuid": "ID_001",
+      "faiss_index": 1
+    },
+    {
+      "uuid": "ID_002",
+      "faiss_index": 2
+    },
+    {
+      "uuid": "ID_003",
+      "faiss_index": 3
+    },
+    {
+      "uuid": "ID_004",
+      "faiss_index": 4
+    },
+    {
+      "uuid": "ID_005",
+      "faiss_index": 5
+    },
+    {
+      "uuid": "ID_006",
+      "faiss_index": 6
+    },
+    {
+      "uuid": "ID_007",
+      "faiss_index": 7
+    },
+    {
+      "uuid": "ID_008",
+      "faiss_index": 8
+    },
+    {
+      "uuid": "ID_009",
+      "faiss_index": 9
+    }
+  ]

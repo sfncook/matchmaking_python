@@ -1,0 +1,60 @@
+{
+  "metadata_db": [
+    {
+      "id": 0,
+      "description": "Random vector 0"
+    },
+    {
+      "id": 1,
+      "description": "Random vector 1"
+    },
+    {
+      "id": 2,
+      "description": "Random vector 2"
+    },
+    {
+      "id": 3,
+      "description": "Random vector 3"
+    },
+    {
+      "id": 4,
+      "description": "Random vector 4"
+    },
+    {
+      "id": 5,
+      "description": "Random vector 5"
+    },
+    {
+      "id": 6,
+      "description": "Random vector 6"
+    },
+    {
+      "id": 7,
+      "description": "Random vector 7"
+    },
+    {
+      "id": 8,
+      "description": "Random vector 8"
+    },
+    {
+      "id": 9,
+      "description": "Random vector 9"
+    },
+    {
+      "id": "foo_bar_001"
+    }
+  ],
+  "id_to_index": {
+    "0": 0,
+    "1": 1,
+    "2": 2,
+    "3": 3,
+    "4": 4,
+    "5": 5,
+    "6": 6,
+    "7": 7,
+    "8": 8,
+    "9": 9,
+    "foo_bar_001": 10
+  }
+}
