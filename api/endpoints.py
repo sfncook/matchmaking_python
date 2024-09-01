@@ -34,8 +34,18 @@ def create_api_blueprint(vector_store):
         vector_store.add_new_product_random(product_uuid)
         return jsonify({"uuid":product_uuid}), 201
 
-    @api.route('/products', methods=['GET'])
-    def get_all_products():
-        return jsonify({"products":vector_store.get_all_products()}), 200
+    @api.route('/products/<string:product_uuid>', methods=['GET'])
+    def get_single_product(product_uuid):
+        product = vector_store.get_product_by_uuid(product_uuid)
+        if product is None:
+            return jsonify({'error': 'Product not found'}), 404
+        return jsonify(product), 200
+
+    @api.route('/consumers/<string:consumer_uuid>', methods=['GET'])
+    def get_single_consumer(consumer_uuid):
+        product = vector_store.get_consumer_by_uuid(consumer_uuid)
+        if product is None:
+            return jsonify({'error': 'Consumer not found'}), 404
+        return jsonify(product), 200
 
     return api

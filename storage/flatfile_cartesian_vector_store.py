@@ -2,6 +2,7 @@ import os
 import json
 from pprint import pprint
 import random
+import numpy as np
 
 CONSUMER_DB_FILE = 'consumers_db_004.json'
 PRODUCT_DB_FILE = 'products_db_004.json'
@@ -47,6 +48,37 @@ class FlatFile_LatLonSpherical_VectorStore:
 
     def get_all_products(self):
         return self.products_data
+
+    # def add_review(self, consumer_uuid:str, product_uuid:str):
+
+
+    def get_consumer_by_uuid(self, consumer_uuid: str):
+        return next((md for md in self.consumers_data if md["uuid"] == consumer_uuid), None)
+
+    def get_product_by_uuid(self, product_uuid: str):
+        return next((md for md in self.products_data if md["uuid"] == product_uuid), None)
+        
+
+    def move_points_by_distance(consumer_point, product_point, distance=1.0):
+        # Convert lists to numpy arrays for easier calculations
+        v1 = np.array(consumer_point)
+        v2 = np.array(product_point)
+        
+        # Calculate the difference vector
+        diff_vector = v2 - v1
+        
+        # Normalize the difference vector
+        norm_diff_vector = diff_vector / np.linalg.norm(diff_vector)
+        
+        # Move each point away from the other by the specified distance
+        new_v1 = v1 - norm_diff_vector * distance
+        new_v2 = v2 + norm_diff_vector * distance
+        
+        new_consumer_point = new_v1.tolist()
+        new_product_point = new_v2.tolist()
+
+        return new_consumer_point, new_product_point
+
 
     def load_db_file(self):
         if os.path.exists(self.consumer_db_file):
