@@ -4,8 +4,8 @@ from pprint import pprint
 import random
 import numpy as np
 
-CONSUMER_DB_FILE = 'consumers_db_004.json'
-PRODUCT_DB_FILE = 'products_db_004.json'
+CONSUMER_DB_FILE = 'consumers_db_005.json'
+PRODUCT_DB_FILE = 'products_db_005.json'
 
 DIMENSIONS = 12
 MIN_VECTOR_VALUE = -10
@@ -87,10 +87,24 @@ class FlatFile_LatLonSpherical_VectorStore:
         new_v1 = v1 - norm_diff_vector * -distance
         new_v2 = v2 + norm_diff_vector * -distance
         
+        # Wrap around dimensions that are out of bounds
+        new_v1 = self.wrap_vector(new_v1)
+        new_v2 = self.wrap_vector(new_v2)
+        
         new_consumer_point = new_v1.tolist()
         new_product_point = new_v2.tolist()
 
         return new_consumer_point, new_product_point
+
+    def wrap_vector(self, vector):
+        # Wrap each dimension within the MIN_VECTOR_VALUE and MAX_VECTOR_VALUE range
+        wrapped_vector = np.where(vector < MIN_VECTOR_VALUE, 
+                                  MAX_VECTOR_VALUE - (MIN_VECTOR_VALUE - vector) % (MAX_VECTOR_VALUE - MIN_VECTOR_VALUE), 
+                                  vector)
+        wrapped_vector = np.where(wrapped_vector > MAX_VECTOR_VALUE, 
+                                  MIN_VECTOR_VALUE + (wrapped_vector - MAX_VECTOR_VALUE) % (MAX_VECTOR_VALUE - MIN_VECTOR_VALUE), 
+                                  wrapped_vector)
+        return wrapped_vector
 
 
     def load_db_file(self):
@@ -111,4 +125,9 @@ class FlatFile_LatLonSpherical_VectorStore:
             json.dump(self.consumers_data, f, indent=4)
         with open(self.product_db_file, 'w') as f:
             json.dump(self.products_data, f, indent=4)
+
+
+
+
+
 
