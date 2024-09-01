@@ -56,12 +56,13 @@ class FlatFile_LatLonSpherical_VectorStore:
         consumer_point = consumer['point']
         product_point = product['point']
         new_consumer_point, new_product_point = self.move_points_by_distance(consumer_point, product_point, review_quantitative)
-        print("CONSUMER")
-        pprint(consumer_point)
-        pprint(new_consumer_point)
-        print("\nPRODUCT")
-        pprint(product_point)
-        pprint(new_product_point)
+        self.update_datem_point_by_uuid(self.consumers_data, consumer_uuid, new_consumer_point)
+        self.update_datem_point_by_uuid(self.products_data, product_uuid, new_product_point)
+
+    def update_datem_point_by_uuid(self, data, uuid, new_point):
+        for datem in data:
+            if datem['uuid'] == uuid:
+                datem['point'] = new_point
 
 
     def get_consumer_by_uuid(self, consumer_uuid: str):
