@@ -82,19 +82,50 @@ class FlatFile_LatLonSpherical_VectorStore:
         new_consumer_point, new_product_point = self.move_points_by_distance(consumer_point, product_point, review_quantitative)
         self.update_datem_point_by_uuid(self.consumers_data, consumer_uuid, new_consumer_point)
         self.update_datem_point_by_uuid(self.products_data, product_uuid, new_product_point)
+        self.save_db_file()
 
     def update_datem_point_by_uuid(self, data, uuid, new_point):
         for datem in data:
             if datem['uuid'] == uuid:
                 datem['point'] = new_point
 
-
     def get_consumer_by_uuid(self, consumer_uuid: str):
         return next((md for md in self.consumers_data if md["uuid"] == consumer_uuid), None)
 
     def get_product_by_uuid(self, product_uuid: str):
         return next((md for md in self.products_data if md["uuid"] == product_uuid), None)
+    
+    def find_nearest_products(self, consumer_uuid: str, n: int):
+        # Ensure n is an integer
+        if not isinstance(n, int):
+            print(f"Type of n: {type(n)}")
+            print(f"Value of n: {n}")
+            print(f"Number of distances available: {len(distances)}")
+
+            raise ValueError(f"The number of nearest products 'n' must be an integer. {n}")
         
+        consumer = self.get_consumer_by_uuid(consumer_uuid)
+        consumer_point = consumer['point']
+        consumer_point_np = np.array(consumer_point)
+        
+        distances = []
+        for product in self.products_data:
+            product_uuid = product['uuid']  # Keep product_uuid as a string
+            product_point = np.array(product['point'])
+            distance = np.linalg.norm(product_point - consumer_point_np)
+            distances.append((distance, product_uuid))
+        
+        distances.sort(key=lambda x: x[0])
+        
+        # Ensure distances contains enough elements and n is within bounds
+        if n > len(distances):
+            raise ValueError(f"Requested number of nearest products 'n' ({n}) exceeds available products ({len(distances)}).")
+        
+        nearest_n_product_uuids = [product_uuid for _, product_uuid in distances[:n]]
+        
+        return nearest_n_product_uuids
+
+
 
     def move_points_by_distance(self, consumer_point, product_point, review_quantitative=1.0):
         # Convert review_quantitative to distance
