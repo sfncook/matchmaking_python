@@ -50,6 +50,30 @@ class FlatFile_LatLonSpherical_VectorStore:
         return self.products_data
 
 
+    def get_distance_between(self, consumer_uuid:str, product_uuid:str):
+        consumer = self.get_consumer_by_uuid(consumer_uuid)
+        product = self.get_product_by_uuid(product_uuid)
+        consumer_point = consumer['point']
+        product_point = product['point']
+
+        # Convert lists to numpy arrays for easier calculations
+        v1 = np.array(consumer_point)
+        v2 = np.array(product_point)
+        
+        # Calculate the Euclidean distance
+        distance = np.linalg.norm(v2 - v1)
+        
+        return distance
+
+    def get_max_distance(self):
+        # The distance between MIN_VECTOR_VALUE and MAX_VECTOR_VALUE
+        max_diff = MAX_VECTOR_VALUE - MIN_VECTOR_VALUE
+        
+        # The maximum distance is achieved when points are opposite in all dimensions
+        max_distance = np.sqrt(DIMENSIONS * (max_diff / 2) ** 2)
+        
+        return max_distance
+
     def add_review(self, consumer_uuid:str, product_uuid:str, review_quantitative:int):
         consumer = self.get_consumer_by_uuid(consumer_uuid)
         product = self.get_product_by_uuid(product_uuid)
@@ -72,13 +96,22 @@ class FlatFile_LatLonSpherical_VectorStore:
         return next((md for md in self.products_data if md["uuid"] == product_uuid), None)
         
 
-    def move_points_by_distance(self, consumer_point, product_point, distance=1.0):
+    def move_points_by_distance(self, consumer_point, product_point, review_quantitative=1.0):
+        # Convert review_quantitative to distance
+        distance = review_quantitative / 5
+
         # Convert lists to numpy arrays for easier calculations
         v1 = np.array(consumer_point)
         v2 = np.array(product_point)
         
         # Calculate the difference vector
         diff_vector = v2 - v1
+        
+        # Handle the case where any dimension in the diff_vector is 0
+        zero_mask = diff_vector == 0
+        if np.any(zero_mask):
+            # Replace zeros with small random values
+            diff_vector[zero_mask] = np.random.uniform(-0.0001, 0.0001, size=np.sum(zero_mask))
         
         # Normalize the difference vector
         norm_diff_vector = diff_vector / np.linalg.norm(diff_vector)

@@ -61,6 +61,18 @@ def create_api_blueprint(vector_store):
         vector_store.add_review(consumer_uuid, product_uuid, review_quantitative)
         return "ok", 201
 
+    @api.route('/distance_between', methods=['GET'])
+    def get_distance_between():
+        consumer_uuid = request.args.get('consumer_uuid')
+        product_uuid = request.args.get('product_uuid')
+        distance = vector_store.get_distance_between(consumer_uuid, product_uuid)
+        return jsonify({"distance":distance}), 201
+
+    @api.route('/max_distance', methods=['GET'])
+    def get_max_distance():
+        distance = vector_store.get_max_distance()
+        return jsonify({"max_distance":distance}), 201
+
     return api
 
 
