@@ -49,7 +49,19 @@ class FlatFile_LatLonSpherical_VectorStore:
     def get_all_products(self):
         return self.products_data
 
-    # def add_review(self, consumer_uuid:str, product_uuid:str):
+
+    def add_review(self, consumer_uuid:str, product_uuid:str, review_quantitative:int):
+        consumer = self.get_consumer_by_uuid(consumer_uuid)
+        product = self.get_product_by_uuid(product_uuid)
+        consumer_point = consumer['point']
+        product_point = product['point']
+        new_consumer_point, new_product_point = self.move_points_by_distance(consumer_point, product_point, review_quantitative)
+        print("CONSUMER")
+        pprint(consumer_point)
+        pprint(new_consumer_point)
+        print("\nPRODUCT")
+        pprint(product_point)
+        pprint(new_product_point)
 
 
     def get_consumer_by_uuid(self, consumer_uuid: str):
@@ -59,7 +71,7 @@ class FlatFile_LatLonSpherical_VectorStore:
         return next((md for md in self.products_data if md["uuid"] == product_uuid), None)
         
 
-    def move_points_by_distance(consumer_point, product_point, distance=1.0):
+    def move_points_by_distance(self, consumer_point, product_point, distance=1.0):
         # Convert lists to numpy arrays for easier calculations
         v1 = np.array(consumer_point)
         v2 = np.array(product_point)
@@ -71,8 +83,8 @@ class FlatFile_LatLonSpherical_VectorStore:
         norm_diff_vector = diff_vector / np.linalg.norm(diff_vector)
         
         # Move each point away from the other by the specified distance
-        new_v1 = v1 - norm_diff_vector * distance
-        new_v2 = v2 + norm_diff_vector * distance
+        new_v1 = v1 - norm_diff_vector * -distance
+        new_v2 = v2 + norm_diff_vector * -distance
         
         new_consumer_point = new_v1.tolist()
         new_product_point = new_v2.tolist()
