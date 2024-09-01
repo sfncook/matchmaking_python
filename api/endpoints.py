@@ -63,10 +63,12 @@ def create_api_blueprint(vector_store):
 
     @api.route('/recommendations', methods=['GET'])
     def get_recommendations():
+        # Get query parameters
         consumer_uuid = request.args.get('consumer_uuid')
-        limit = int(request.args.get('limit'))
-        distance = vector_store.find_nearest_products(consumer_uuid, limit)
-        return jsonify({"distance":distance}), 200
+        limit = int(request.args.get('limit', 10))
+        nearest_product_uuids = vector_store.find_nearest_products(consumer_uuid, limit)
+        predictions = vector_store.get_predictions(consumer_uuid, nearest_product_uuids)
+        return jsonify({"recommendations": predictions}), 200
 
     @api.route('/distances/between_consumer_and_product', methods=['GET'])
     def get_distance_between():

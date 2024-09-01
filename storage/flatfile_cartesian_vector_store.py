@@ -181,6 +181,42 @@ class FlatFile_LatLonSpherical_VectorStore:
                                   wrapped_vector)
         return wrapped_vector
 
+    def interpolate_prediction(self, distance):
+        """
+        Interpolate prediction value based on distance using linear interpolation
+        between MIN_DISTANCE and MAX_DISTANCE.
+        """
+        MIN_DISTANCE = 0.4
+        MAX_DISTANCE = 34.0
+        MIN_PREDICTION = 10
+        MAX_PREDICTION = -10
+        if distance <= MIN_DISTANCE:
+            return MIN_PREDICTION
+        elif distance >= MAX_DISTANCE:
+            return MAX_PREDICTION
+        else:
+            # Linear interpolation
+            normalized_distance = (distance - MIN_DISTANCE) / (MAX_DISTANCE - MIN_DISTANCE)
+            return MAX_PREDICTION + (MIN_PREDICTION - MAX_PREDICTION) * (1 - normalized_distance)
+
+
+    def get_predictions(self, consumer_uuid, product_uuids):
+        consumer = self.get_consumer_by_uuid(consumer_uuid)
+        consumer_point = consumer['point']
+        consumer_point_np = np.array(consumer_point)
+        predictions = []
+        for product_uuid in product_uuids:
+            product = self.get_product_by_uuid(product_uuid)
+            product_point = product['point']
+            product_point_np = np.array(product_point)
+            
+            # Calculate the distance between consumer and product points
+            distance = np.linalg.norm(product_point_np - consumer_point_np)
+            prediction_value = self.interpolate_prediction(distance)
+            predictions.append({"uuid": product_uuid, "distance": distance, "prediction": prediction_value})
+        
+        return predictions
+
 
     def load_db_file(self):
         if os.path.exists(self.consumer_db_file):
