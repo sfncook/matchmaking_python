@@ -125,7 +125,18 @@ class FlatFile_LatLonSpherical_VectorStore:
         
         return nearest_n_product_uuids
 
-
+    def get_all_distances(self, consumer_uuid):
+        consumer = self.get_consumer_by_uuid(consumer_uuid)
+        consumer_point = consumer['point']
+        consumer_point_np = np.array(consumer_point)
+        distances = []
+        for product in self.products_data:
+            product_point_np = np.array(product['point'])
+            distance = np.linalg.norm(product_point_np - consumer_point_np)
+            distances.append((distance, product['uuid']))
+        distances.sort(key=lambda x: x[0])
+        sorted_products = [{"uuid": uuid, "distance": distance} for distance, uuid in distances]
+        return sorted_products
 
     def move_points_by_distance(self, consumer_point, product_point, review_quantitative=1.0):
         # Convert review_quantitative to distance
