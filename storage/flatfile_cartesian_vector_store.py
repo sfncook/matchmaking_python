@@ -74,17 +74,25 @@ class FlatFile_LatLonSpherical_VectorStore:
         
         return max_distance
 
-    def add_review(self, consumer_uuid:str, product_uuid:str, review_quantitative:int):
+    def add_review(
+        self, 
+        consumer_uuid:str, 
+        product_uuid:str, 
+        review_quantitative:int,
+        consumer_reviews_count:int,
+        product_reviews_count:int
+    ):
         consumer = self.get_consumer_by_uuid(consumer_uuid)
         product = self.get_product_by_uuid(product_uuid)
         consumer_point = consumer['point']
         product_point = product['point']
-        distance_to_move_points = self.review_quant_to_distance_to_move_points(review_quantitative)
-        new_consumer_point, new_product_point = self.get_updated_points_by_distance(consumer_point, product_point, distance_to_move_points)
+        distance_to_move_consumer = self.review_quant_to_distance_to_move_points(review_quantitative, consumer_reviews_count)
+        distance_to_move_product = self.review_quant_to_distance_to_move_points(review_quantitative, product_reviews_count)
+        new_consumer_point, new_product_point = self.get_updated_points_by_distance(consumer_point, product_point, distance_to_move_consumer, distance_to_move_product)
         self.update_datem_point_by_uuid(self.consumers_data, consumer_uuid, new_consumer_point)
         self.update_datem_point_by_uuid(self.products_data, product_uuid, new_product_point)
         self.save_db_file()
-        return distance_to_move_points
+        return distance_to_move_consumer, distance_to_move_product
 
     def update_datem_point_by_uuid(self, data, uuid, new_point):
         for datem in data:
@@ -140,11 +148,30 @@ class FlatFile_LatLonSpherical_VectorStore:
         sorted_products = [{"uuid": uuid, "distance": distance} for distance, uuid in distances]
         return sorted_products
 
-    def review_quant_to_distance_to_move_points(self, review_quantitative=1.0):
-        #  Adding a '-' to flip the sign because Positive reviews == closer-together (negative distance)
-        return -(review_quantitative / 5)
+    def review_quant_to_distance_to_move_points(
+        self, 
+        review_quantitative, 
+        reviews_count: int
+    ):
+        # Determine the interpolation factor based on reviews_count
+        if reviews_count >= 10:
+            interpolation_factor = 0.1
+        else:
+            interpolation_factor = 1 - (reviews_count * 0.09)  # Linear interpolation
 
-    def get_updated_points_by_distance(self, consumer_point, product_point, distance_to_move_points):
+        # Modulate the response value
+        modulated_value = review_quantitative / 5 * interpolation_factor
+
+        # Adding a '-' to flip the sign because Positive reviews == closer-together (negative distance)
+        return -modulated_value
+
+    def get_updated_points_by_distance(
+        self, 
+        consumer_point, 
+        product_point, 
+        distance_to_move_consumer, 
+        distance_to_move_product
+    ):
         # Convert lists to numpy arrays for easier calculations
         v1 = np.array(consumer_point)
         v2 = np.array(product_point)
@@ -162,8 +189,8 @@ class FlatFile_LatLonSpherical_VectorStore:
         norm_diff_vector = diff_vector / np.linalg.norm(diff_vector)
         
         # Move each point away from the other by the specified distance
-        new_v1 = v1 - norm_diff_vector * distance_to_move_points
-        new_v2 = v2 + norm_diff_vector * distance_to_move_points
+        new_v1 = v1 - norm_diff_vector * distance_to_move_consumer
+        new_v2 = v2 + norm_diff_vector * distance_to_move_product
         
         # Wrap around dimensions that are out of bounds
         new_v1 = self.wrap_vector(new_v1)

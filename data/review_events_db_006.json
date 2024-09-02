@@ -40,5 +40,26 @@
         "product_uuid": "740b59c1-4005-407e-9fdb-d175fc59fccf",
         "review_quantitative": 9,
         "timestamp": "2024-09-02T08:55:10.265787"
+    },
+    {
+        "uuid": "21e94c52-eabf-4967-93f3-c3db1a4f4995",
+        "consumer_uuid": "268195fd-0ad6-4fda-9d75-8769a8531cc4",
+        "product_uuid": "740b59c1-4005-407e-9fdb-d175fc59fccf",
+        "review_quantitative": 9,
+        "timestamp": "2024-09-02T12:18:54.470817"
+    },
+    {
+        "uuid": "b4b073ce-6c05-4d7c-b668-0781446d02cf",
+        "consumer_uuid": "268195fd-0ad6-4fda-9d75-8769a8531cc4",
+        "product_uuid": "740b59c1-4005-407e-9fdb-d175fc59fccf",
+        "review_quantitative": 9,
+        "timestamp": "2024-09-02T12:58:45.769669"
+    },
+    {
+        "uuid": "8ac79a41-4bf5-4c96-82a4-0e88a12b5d88",
+        "consumer_uuid": "268195fd-0ad6-4fda-9d75-8769a8531cc4",
+        "product_uuid": "740b59c1-4005-407e-9fdb-d175fc59fccf",
+        "review_quantitative": 9,
+        "timestamp": "2024-09-02T12:59:09.012754"
     }
 ]

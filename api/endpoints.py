@@ -86,9 +86,22 @@ def create_api_blueprint(vector_store, review_events_store):
         review_quantitative = data['review_quantitative']
         consumer_uuid = data['consumer_uuid']
         product_uuid = data['product_uuid']
+        consumer_reviews_count = review_events_store.get_count_review_events_for_consumer(consumer_uuid)
+        product_reviews_count = review_events_store.get_count_review_events_for_product(product_uuid)
         new_review_event_uuid = str(uuid.uuid4())
-        review_events_store.add_new_review_event(new_review_event_uuid, consumer_uuid, product_uuid,review_quantitative)
-        vector_store.add_review(consumer_uuid, product_uuid, review_quantitative)
+        review_events_store.add_new_review_event(
+            new_review_event_uuid, 
+            consumer_uuid, 
+            product_uuid,
+            review_quantitative
+        )
+        vector_store.add_review(
+            consumer_uuid, 
+            product_uuid, 
+            review_quantitative,
+            consumer_reviews_count,
+            product_reviews_count
+        )
         return "ok", 201
 
     @api.route('/reviews', methods=['GET'])
