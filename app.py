@@ -2,7 +2,6 @@ from flask import Flask
 from flask_cors import CORS
 import os
 from api.endpoints import create_api_blueprint
-from storage.flatfile_vector_store import FlatFileVectorStore
 from storage.flatfile_cartesian_vector_store import FlatFile_LatLonSpherical_VectorStore
 
 app = Flask(__name__)
