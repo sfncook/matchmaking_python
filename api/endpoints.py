@@ -9,7 +9,7 @@ import os
 
 api = Blueprint('api', __name__)
 
-def create_api_blueprint(vector_store):
+def create_api_blueprint(vector_store, review_events_store):
 
     @api.route('/hello', methods=['GET'])
     def hello_world():
@@ -52,15 +52,6 @@ def create_api_blueprint(vector_store):
             return jsonify({'error': 'Consumer not found'}), 404
         return jsonify(product), 200
 
-    @api.route('/reviews', methods=['POST'])
-    def add_review():
-        data = request.json
-        review_quantitative = data['review_quantitative']
-        consumer_uuid = data['consumer_uuid']
-        product_uuid = data['product_uuid']
-        vector_store.add_review(consumer_uuid, product_uuid, review_quantitative)
-        return "ok", 201
-
     @api.route('/recommendations', methods=['GET'])
     def get_recommendations():
         # Get query parameters
@@ -87,6 +78,22 @@ def create_api_blueprint(vector_store):
         consumer_uuid = request.args.get('consumer_uuid')
         distance = vector_store.get_all_distances(consumer_uuid)
         return jsonify({"distance":distance}), 200
+
+
+    @api.route('/reviews', methods=['POST'])
+    def add_review():
+        data = request.json
+        review_quantitative = data['review_quantitative']
+        consumer_uuid = data['consumer_uuid']
+        product_uuid = data['product_uuid']
+        new_review_event_uuid = str(uuid.uuid4())
+        review_events_store.add_new_review_event(new_review_event_uuid, consumer_uuid, product_uuid,review_quantitative)
+        vector_store.add_review(consumer_uuid, product_uuid, review_quantitative)
+        return "ok", 201
+
+    @api.route('/reviews', methods=['GET'])
+    def get_all_review_events():
+        return jsonify({"reviews":review_events_store.get_all_review_events()}), 200
 
     return api
 
