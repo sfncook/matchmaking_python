@@ -79,10 +79,12 @@ class FlatFile_LatLonSpherical_VectorStore:
         product = self.get_product_by_uuid(product_uuid)
         consumer_point = consumer['point']
         product_point = product['point']
-        new_consumer_point, new_product_point = self.move_points_by_distance(consumer_point, product_point, review_quantitative)
+        distance_to_move_points = self.review_quant_to_distance_to_move_points(review_quantitative)
+        new_consumer_point, new_product_point = self.get_updated_points_by_distance(consumer_point, product_point, distance_to_move_points)
         self.update_datem_point_by_uuid(self.consumers_data, consumer_uuid, new_consumer_point)
         self.update_datem_point_by_uuid(self.products_data, product_uuid, new_product_point)
         self.save_db_file()
+        return distance_to_move_points
 
     def update_datem_point_by_uuid(self, data, uuid, new_point):
         for datem in data:
@@ -138,10 +140,11 @@ class FlatFile_LatLonSpherical_VectorStore:
         sorted_products = [{"uuid": uuid, "distance": distance} for distance, uuid in distances]
         return sorted_products
 
-    def move_points_by_distance(self, consumer_point, product_point, review_quantitative=1.0):
-        # Convert review_quantitative to distance
-        distance = review_quantitative / 5
+    def review_quant_to_distance_to_move_points(self, review_quantitative=1.0):
+        #  Adding a '-' to flip the sign because Positive reviews == closer-together (negative distance)
+        return -(review_quantitative / 5)
 
+    def get_updated_points_by_distance(self, consumer_point, product_point, distance_to_move_points):
         # Convert lists to numpy arrays for easier calculations
         v1 = np.array(consumer_point)
         v2 = np.array(product_point)
@@ -159,8 +162,8 @@ class FlatFile_LatLonSpherical_VectorStore:
         norm_diff_vector = diff_vector / np.linalg.norm(diff_vector)
         
         # Move each point away from the other by the specified distance
-        new_v1 = v1 - norm_diff_vector * -distance
-        new_v2 = v2 + norm_diff_vector * -distance
+        new_v1 = v1 - norm_diff_vector * distance_to_move_points
+        new_v2 = v2 + norm_diff_vector * distance_to_move_points
         
         # Wrap around dimensions that are out of bounds
         new_v1 = self.wrap_vector(new_v1)
@@ -170,6 +173,8 @@ class FlatFile_LatLonSpherical_VectorStore:
         new_product_point = new_v2.tolist()
 
         return new_consumer_point, new_product_point
+
+        
 
     def wrap_vector(self, vector):
         # Wrap each dimension within the MIN_VECTOR_VALUE and MAX_VECTOR_VALUE range
