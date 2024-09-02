@@ -16,6 +16,7 @@ app.register_blueprint(create_api_blueprint(vector_store, review_events_store))
 @app.before_first_request
 def initialize_app():
     vector_store.initialize()
+    review_events_store.initialize()
 
 if __name__ == '__main__':
     app.run(debug=True)  # Keep debug=True for development; consider setting to False in production

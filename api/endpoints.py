@@ -95,6 +95,14 @@ def create_api_blueprint(vector_store, review_events_store):
     def get_all_review_events():
         return jsonify({"reviews":review_events_store.get_all_review_events()}), 200
 
+    @api.route('/reviews/consumers/<string:consumer_uuid>/count', methods=['GET'])
+    def get_reviews_consumer_count(consumer_uuid):
+        return jsonify({"count":review_events_store.get_count_review_events_for_consumer(consumer_uuid)}), 200
+
+    @api.route('/reviews/products/<string:product_uuid>/count', methods=['GET'])
+    def get_reviews_product_count(product_uuid):
+        return jsonify({"count":review_events_store.get_count_review_events_for_product(product_uuid)}), 200
+
     return api
 
 

@@ -29,6 +29,12 @@ class Review_Events_Store:
     def get_all_review_events(self):
         return self.review_events_data
 
+    def get_count_review_events_for_consumer(self, consumer_uuid: str) -> int:
+        return sum(1 for event in self.review_events_data if event.get("consumer_uuid") == consumer_uuid)
+
+    def get_count_review_events_for_product(self, product_uuid: str) -> int:
+        return sum(1 for event in self.review_events_data if event.get("product_uuid") == product_uuid)
+
     def load_db_file(self):
         if os.path.exists(self.review_events_db_file):
             with open(self.review_events_db_file, 'r') as f:
