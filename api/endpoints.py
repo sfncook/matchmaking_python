@@ -1,11 +1,6 @@
 from flask import Blueprint, request, jsonify
-import numpy as np
-import random
 import uuid
 from pprint import pprint
-import pickle
-import json
-import os
 
 api = Blueprint('api', __name__)
 
@@ -20,6 +15,28 @@ def create_api_blueprint(vector_store, review_events_store):
 
     @api.route('/consumers', methods=['POST'])
     def add_random_consumer():
+        """
+        Add a new consumer with a randomly generated UUID.
+
+        This endpoint creates a new consumer by generating a random UUID and 
+        storing the consumer's information in the vector store. The UUID is 
+        returned in the response as confirmation of successful creation.
+
+        Endpoint:
+            POST /consumers
+
+        Response:
+            JSON: A dictionary with the key 'uuid' containing the generated UUID.
+            Status Code: 201 (Created)
+
+        Example Response:
+            {
+                "uuid": "123e4567-e89b-12d3-a456-426614174000"
+            }
+
+        Returns:
+            flask.Response: A JSON response with the UUID of the newly created consumer.
+        """
         consumer_uuid = str(uuid.uuid4())
         vector_store.add_new_consumer_random(consumer_uuid)
         return jsonify({"uuid":consumer_uuid}), 201

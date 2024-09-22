@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-import os
 from api.endpoints import create_api_blueprint
 from storage.flatfile_cartesian_vector_store import FlatFile_LatLonSpherical_VectorStore
 from storage.review_events_store import Review_Events_Store

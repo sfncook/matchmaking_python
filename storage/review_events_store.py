@@ -1,8 +1,5 @@
 import os
 import json
-from pprint import pprint
-import random
-import numpy as np
 from datetime import datetime
 
 REVIEW_EVENTS_DB_FILE = 'review_events_db_006.json'
