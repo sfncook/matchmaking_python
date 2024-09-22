@@ -4,8 +4,8 @@ from pprint import pprint
 import random
 import numpy as np
 
-CONSUMER_DB_FILE = 'consumers_db_006.json'
-PRODUCT_DB_FILE = 'products_db_006.json'
+CONSUMER_DB_FILE = 'random_points/consumers_db_006.json'
+PRODUCT_DB_FILE = 'random_points/products_db_006.json'
 
 DIMENSIONS = 12
 MIN_VECTOR_VALUE = -10

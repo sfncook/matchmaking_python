@@ -2,7 +2,7 @@ import os
 import json
 from datetime import datetime
 
-REVIEW_EVENTS_DB_FILE = 'review_events_db_006.json'
+REVIEW_EVENTS_DB_FILE = 'random_points/review_events_db_006.json'
 
 class Review_Events_Store:
     def __init__(self):
